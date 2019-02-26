@@ -27,19 +27,27 @@ func New(nodes []string, hash Hasher) *Rendezvous {
 }
 
 func (r *Rendezvous) Lookup(k string) string {
-	khash := r.hash(k)
+	return r.nstr[r.midx(k)]
+}
 
-	var midx int
-	var mhash = xorshiftMult64(khash ^ r.nhash[0])
-
-	for i, nhash := range r.nhash[1:] {
-		if h := xorshiftMult64(khash ^ nhash); h > mhash {
-			midx = i + 1
-			mhash = h
+func (r *Rendezvous) LookupN(k string, n int) []string {
+	midx := r.midx(k)
+	idxs := make([]int, n)
+	nl := len(r.nodes)
+	step := nl / n
+	for i := 0; i < n; i++ {
+		if idx := midx + (i * step); idx < nl {
+			idxs[i] = idx
+		} else {
+			idxs[i] = idx % nl
 		}
 	}
 
-	return r.nstr[midx]
+	found := make([]string, 0, n)
+	for _, idx := range idxs {
+		found = append(found, r.nstr[idx])
+	}
+	return found
 }
 
 func (r *Rendezvous) Add(node string) {
@@ -71,4 +79,20 @@ func xorshiftMult64(x uint64) uint64 {
 	x ^= x << 25 // b
 	x ^= x >> 27 // c
 	return x * 2685821657736338717
+}
+
+func (r *Rendezvous) midx(k string) int {
+	khash := r.hash(k)
+
+	var midx int
+	var mhash = xorshiftMult64(khash ^ r.nhash[0])
+
+	for i, nhash := range r.nhash[1:] {
+		if h := xorshiftMult64(khash ^ nhash); h > mhash {
+			midx = i + 1
+			mhash = h
+		}
+	}
+
+	return midx
 }
