@@ -61,17 +61,15 @@ func (r *Rendezvous) Remove(node string) {
 	nidx := r.nodes[node]
 
 	// remove from the slices
-	l := len(r.nstr)
-	r.nstr[nidx] = r.nstr[l]
-	r.nstr = r.nstr[:l]
-
-	r.nhash[nidx] = r.nhash[l]
-	r.nhash = r.nhash[:l]
+	r.nstr = append(r.nstr[:nidx], r.nstr[nidx+1:]...)
+	r.nhash = append(r.nhash[:nidx], r.nhash[nidx+1:]...)
 
 	// update the map
 	delete(r.nodes, node)
-	moved := r.nstr[nidx]
-	r.nodes[moved] = nidx
+	if nidx < len(r.nstr) {
+		moved := r.nstr[nidx]
+		r.nodes[moved] = nidx
+	}
 }
 
 func xorshiftMult64(x uint64) uint64 {
