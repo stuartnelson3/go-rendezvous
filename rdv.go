@@ -30,12 +30,13 @@ func (r *Rendezvous) Lookup(k string) string {
 	return r.nstr[r.midx(k)]
 }
 
-func (r *Rendezvous) LookupN(k string, n int) []string {
+func (r *Rendezvous) LookupN(k string, n uint) []string {
 	midx := r.midx(k)
-	idxs := make([]int, n)
+	c := int(n)
+	idxs := make([]int, c)
 	nl := len(r.nodes)
-	step := nl / n
-	for i := 0; i < n; i++ {
+	step := nl / c
+	for i := 0; i < c; i++ {
 		if idx := midx + (i * step); idx < nl {
 			idxs[i] = idx
 		} else {
@@ -43,7 +44,7 @@ func (r *Rendezvous) LookupN(k string, n int) []string {
 		}
 	}
 
-	found := make([]string, 0, n)
+	found := make([]string, 0, c)
 	for _, idx := range idxs {
 		found = append(found, r.nstr[idx])
 	}
